@@ -8,9 +8,8 @@ var getDefinition = "var def = document.getElementsByClassName('def-content');" 
                     "console.log(definition);" +
                     "self.postMessage(definition, self.contentURL);" +
                     "word = document.getElementsByClassName('js-headword');" +
-                    "word = word.textContent;" +
-                    "refreshText();"
-                    
+                    "word = word.textContent;"
+
 pageWorker = require("sdk/page-worker").Page({
   contentScript: getDefinition,
   contentScriptFile: [
