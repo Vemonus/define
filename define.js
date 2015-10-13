@@ -1,39 +1,30 @@
-$('body').append('<div id="define" style="display:none; position:center;" title="">');
+$('body').append('<div id="define" style="display:block; position:center;" title=""><div id="definition" style="background-color:blue; text-align:center;"></div>');
 $('body').append('</div>');
+
+
+var definition;
 
 $('#define').dialog({
     modal:true,
     autoOpen:false,
     height:50,
     minWidth:400,
-    minHeight:30,
+    minHeight:40,
     draggable:true,
 });
 
-function calldictionary(word){
-    var test;
-    $('#define').html('<div id="definition" style="background-color:blue; text-align:center;">You picked the word ' + word + '.');
-    var reference = '<a href="http://app.dictionary.com/click/hbnm17?clkdest=http://dictionary.reference.com/browse/' + word + '"/>';
-    var complete_url = urlheader + word;
-    $('#define').append('<div id="link" style="background-color:grey; text-align:left;"><a href=' + complete_url + '>Define</div>');
-    $('div#define').attr('title', word);
+function calldictionary(definition){
+    console.log(definition);
+    $('div#definition').text(definition);
+    $('#define').dialog("open");
 }
 
-function emitTest(){
-    self.port.emit("updatedWord");
-}
-
-$(window).dblclick(function() {
+function send(){
     var selected = getSelected();
-    if (selected!="") {
-        calldictionary(selected);
-        var completedURL = "http://www.dictionary.com/browse/" + selected;
-        $('#define').dialog("open");
-        dictionaryRef.contentURL = completedURL;
-        self.port.emit("test");
-        self.port.emit("updatedWord");
+    if (selected != ""){
+        self.port.emit("dblclick", selected);
     }
-});
+}
 
 function getSelected() {
     if (window.getSelection) {
@@ -44,6 +35,10 @@ function getSelected() {
     return '';
 }
 
-self.port.on("updatedWord", function(){
-    console.log("index.js emitted updatedWord");
+$(window).dblclick(function() {
+    send();
+});
+
+self.port.on("dialog", function(definition){
+    calldictionary(definition);
 });
