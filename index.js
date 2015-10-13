@@ -1,54 +1,44 @@
 var data = require("sdk/self").data;
-var pageMod = require("sdk/page-mod");
-var dictionaryRef = require("sdk/page-worker");
+var word;
+var definition = 'Loading...';
+var loading = false;
 
-pageMod.PageMod({
-  include: "*",
-  contentScriptWhen: "ready",
+var getDefinition = "var def = document.getElementsByClassName('def-content');" +
+                    "definition = def[0].textContent;" +
+                    "console.log(definition);" +
+                    "self.postMessage(definition, self.contentURL);" +
+                    "word = document.getElementsByClassName('js-headword');" +
+                    "word = word.textContent;" +
+                    "refreshText();"
+                    
+pageWorker = require("sdk/page-worker").Page({
+  contentScript: getDefinition,
   contentScriptFile: [
-  	data.url("jquery.js"),
-	data.url("jquery-ui.min.js"),
-    data.url("definitionsender.js"),
-	data.url("define.js")
-    // data.url("query.js")
+    data.url("jquery.js"),
+    data.url("jquery-ui.min.js"),
+    data.url("define.js")
   ],
+  contentURL: "http://dictionary.reference.com/browse/success",
   onAttach: function(worker){
-      contentScriptFile: [
-        data.url("jquery.js"),
-        data.url("jquery-ui.min.js"),
-        data.url("define.js")
-      ]
-      worker.port.emit("getWord", "this");
-      worker.port.on("getWord", function(word) {
-          console.log("word selected");
-          worker.port.emit("newWord", word);
-      });
-      worker.port.on("updatedWord", function(url){
-          console.log(url);
-      });
-    }
+      self.port.emit("complete");
+  }
 });
 
-dictionaryRef.Page({
+currPage = require("sdk/page-mod").PageMod({
+    include: "*",
     contentScriptWhen: "ready",
     contentScriptFile: [
-      data.url("jquery.js"),
-      data.url("jquery-ui.min.js"),
-      data.url("define.js"),
-      // data.url("query.js"),
-      data.url("definitionsender.js")
+        data.url("jquery.js"),
+        data.url("jquery-ui.min.js"),
+        data.url("define.js"),
     ],
-    contentURL: "http://www.dictionary.com/browse/",
-    contentScript: "console.log('hello')",
     onAttach: function(worker){
-        // worker.port.emit("definition", function(){
-            // console.log("word definition output goes here");
-        // });
-        worker.port.emit("getWord", "this");
-        worker.port.on("newWord", function(word) {
-            console.log(word);
-            self.contentURL = "http://www.dictionary.com/browse/" + word;
-            worker.port.emit("updatedWord", self.contentURL);
+        worker.port.on("dblclick", function(selected){
+            pageWorker.contentURL = "http://dictionary.reference.com/browse/" + selected;
+            worker.port.emit("dialog", definition);
+            worker.on("message", function(){
+                console.log("pageMod received a message!");
+            });
         });
     }
 });
